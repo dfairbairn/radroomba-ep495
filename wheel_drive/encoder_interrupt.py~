@@ -1,0 +1,51 @@
+from __future__ import print_function
+from dual_mc33926_rpi import motors, MAX_SPEED
+
+def encoder_ISR_L(control_bools,encoders,encoders_prev, target):
+    #First things first, increment the left encoder
+    encoders["left"] += 1
+
+    #Wheels are 6 cm in radius, so it takes 0.32892 rotations to travel 12.4 cm. 131 encoder edges per rotation so
+    #43.08 encoder edges to reach the desired position. Round down to 43, but every 10 increments add an extra increment
+    #to keep an accurate record of total distance moved.
+    if encoders["left"] - encoders_prev["left"] % 10 != 0:
+        encoders["left"] += 1
+
+    #Did this wheel go far enough? If it did but the other wheel hasnt yet, slow the robot way down, since the other
+    #wheel is likely to reach the goal *very* soon, and we want to avoid inertia-related overshooting if possible
+    if encoders["left"] - encoders_prev["left"] >= target:
+        control_bools["left_limit"] = True
+        #Stop the motors immediately if the target has been reached by both wheels
+        if control_bools["left_limit"] and control_bools["right_limit"]:
+            control_bools["far_enough"] = True
+            motors.setSpeed(0,0)
+        #Slow the motors by a factor of 4 if we are still waiting on the right wheel
+        else:
+            motors.setSpeed(MAX_SPEED/8,MAX_SPEED/8)
+
+    #Exit the ISR
+    return
+def encoder_ISR_R(control_bools,encoders,encoders_prev, target):
+    #First things first, increment the left encoder
+    encoders["right"] += 1
+
+    #Wheels are 6 cm in radius, so it takes 0.32892 rotations to travel 12.4 cm. 131 encoder edges per rotation so
+    #43.08 encoder edges to reach the desired position. Round down to 43, but every 10 add an extra increment to keep
+    #an accurate record of total distance moved.
+    if encoders["right"] - encoders_prev["right"] % 10 != 0:
+        encoders["right"] += 1
+
+    #Did this wheel go far enough? If it did but the other wheel hasnt yet, slow the robot way down, since the other
+    #wheel is likely to reach the goal *very* soon, and we want to avoid inertia-related overshooting if possible
+    if encoders["right"] - encoders_prev["right"] >= target:
+        control_bools["right_limit"] = True
+        #Stop the motors immediately if the target has been reached by both wheels
+        if control_bools["left_limit"] and control_bools["right_limit"]:
+            control_bools["far_enough"] = True
+            motors.setSpeed(0,0)
+        #Slow the motors by a factor of 4 if we are still waiting on the left wheel
+        else:
+            motors.setSpeed(MAX_SPEED/8,MAX_SPEED/8)
+
+    #Exit the ISR
+    return
