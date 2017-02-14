@@ -1,16 +1,20 @@
 #!/usr/bin/python
 """
-Possibly our main python script containing the master task for the robot?
+file: 'main.py'
+date: February 2017
 
-For now I just have the script portion of this file calling a specific 
-function for the main loop.
+description: 
+    Possibly our main python script containing the master task for the robot?
 
-Before entering the main loop, maybe spawn our tasks
+    For now I just have the script portion of this file calling a specific 
+    function for the main loop.
+
 """
 import thread 
 # use this like: thread.start_new_thread( <func_name>, (args) ) where args
 # are the args intended to be provided to func_name.  
 import time
+import probe_serial
 
 def main():
     """
@@ -29,12 +33,15 @@ def main():
 
     while True:
         # Check current state of sensors
+        # wall_found = check_IR() ... 
 
         # Decide what to do next based on sensor state and op-mode state?
+        # if not wall_found:
+        #   move_one_increment()
+        #   do_read_sweep()
 
         time.sleep(0.5)  # Placeholder code
         print "Another sleepy iteration of the main loop!"
-    
 
 def dummy_serial_task(threadName, delayTime):
     """ Placeholder for probe handler task. Could just call probe code."""
