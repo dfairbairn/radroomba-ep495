@@ -6,7 +6,7 @@ from __future__ import print_function
 import sys
 import time
 import wiringpi
-from dual_mc33926_rpi import motors, MAX_SPEED
+from wheel_drive/dual_mc33926_rpi import motors, MAX_SPEED
 
 #Python 2 is dumb and gives an error having to do with clearing the stdout buffer due to my use of a try except block.
 #This bit of code will kill the error message

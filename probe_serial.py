@@ -12,6 +12,7 @@ description: This file contains the code for the task responsible for listening
 
 import time
 import serial
+import localization
 from struct import *
 
 import wiringpi
@@ -58,6 +59,7 @@ def initialize_raster_scanner():
         state = 1 - state
         wiringpi.delayMicroseconds(STEP_DELAY)
     nxt_raster_dir = 1
+    return
 
 def do_read_sweep():
     """ 
@@ -95,13 +97,14 @@ def do_read_sweep():
     data2 = probe.read(15) 
 
     # Next, acquire current location from the localization module
-    # location = localization.get_curr_loc()
-    loc_centr = (100.0,200.0)
+    x, y, phi = localization.get_position(location)
+    loc_centr = (x,y,phi)
     loc1 = loc_centr # TODO: do simple orientation math of raster scanner later
     loc2 = loc_centr
     save_reading(data1,loc1)
     save_reading(data2,loc2)
-    probe.close()        
+    probe.close()
+    return
 
 def save_reading(data, loc):
     """
@@ -122,7 +125,7 @@ def save_reading(data, loc):
     f = open(scan_fname, "a")
     f.write("%d,%d,%d\n" % (scalarCounts, loc[0], loc[1]))
     f.close() 
- 
+    return
 
 def probe_continuous_read():
     """ This task is set up currently to continually accept readings and append
@@ -148,13 +151,14 @@ def probe_continuous_read():
         
         # Next, acquire current location from the localization module
         # location = localization.get_curr_loc()
-        location = (100.0,200.0)
+        locat = localization.get_position(location)
 
         f = open("scan_data.txt", "a")
-        f.write("%d,%d,%d\n" % (scalarCounts, location[0], location[1]))
+        f.write("%d,%d,%d\n" % (scalarCounts, locat[0], locat[1]))
         f.close() 
-    probe.close()        
-
+    probe.close()
+    return
+    
 if __name__=="__main__":
     """
     To run the earliest iteration of this code which writes probe data to a 
