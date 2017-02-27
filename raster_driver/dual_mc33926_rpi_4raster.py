@@ -32,11 +32,11 @@ class Motor(object):
 
     def enable(self):
         io_init()
-        wiringpi.digitalWrite(self.en_pin, 1)
+        wiringpi.digitalWrite(self.en_pin, 0)
 
     def disable(self):
         io_init()
-        wiringpi.digitalWrite(self.en_pin, 0)
+        wiringpi.digitalWrite(self.en_pin, 1)
 
     def setDirection(self, dir):
         io_init()
