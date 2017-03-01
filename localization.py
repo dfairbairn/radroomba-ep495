@@ -10,7 +10,9 @@ import sys
 import time
 import math
 
-from resources/Adafruit_Python_BNO055/Adafruit_BNO055 import BNO055
+from imp import load_source
+path_to_loc_drivers='resources/Adafruit_Python_BNO055/'
+load_source('Adafruit_BNO055', path_to_loc_drivers) 
 
 def locat_create(x = 0, y = 0, phi = 0):
     """Creates a new dictionary to store the location of the robot. Unless
