@@ -95,7 +95,7 @@ def read_IR(adc_channel, last_read):
 last_read = 0
 
 while True:
-    result = read_IR(0, last_read) # get result for channel 2
+    result = read_IR(0, last_read) # get result for channel 0
     last_read = result[0] # Store new last_read
     print(last_read)
     print("The wall is", result[1])
