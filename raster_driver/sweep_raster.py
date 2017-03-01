@@ -36,7 +36,8 @@ if __name__=="__main__":
     # the STEP input, so the raw PWM frequency we need is in fact 333.33333... Hz.
     
     #Initial direction
-    direction = 1
+    direction = 0
+    motor.setDirection(direction)
     
     #Infinite loop for testing purposes (speed of 20 means 50% duty cycle)
     try:
