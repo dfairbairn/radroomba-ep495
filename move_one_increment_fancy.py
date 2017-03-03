@@ -9,7 +9,7 @@ import wiringpi
 import math
 import localization
 from dual_mc33926_rpi import motors, MAX_SPEED
-from resources/Adafruit_Python_BNO055/Adafruit_BNO055 import BNO055
+from Adafruit_BNO055 import BNO055
 
 #Python 2 is dumb and gives an error having to do with clearing the stdout buffer due to my use of a try except block.
 #This bit of code will kill the error message
@@ -76,7 +76,7 @@ location = {"x": 0, "y": 0, 'phi': 0}
 def look_here(location,phiGoing):
     """Attempts to orient the robot so it is facing in the direction specified
     by phiGoing (measured counterclockwise from the y-axis in degrees)"""
-
+    print('Starting to turn')
     rotate_speed = MAX_SPEED/6
     right_direction = False
     garbage1, garbage2, phiNow = localization.get_position(location)
@@ -93,9 +93,10 @@ def look_here(location,phiGoing):
     motors.setSpeeds(0, 0)
     #Drive until it is determined that the robot is facing the right direction (determined by polling the IMU)
     motors.setSpeeds(rotate_speed, -rotate_speed)
-    while right_direction = False:
+    while right_direction == False:
         time.wait(0.005)
         phiNow, garbage1, garbage2 = bno.read_euler()
+        print(phiNow)
         if abs(phiNow - phiGoing) <= 2:
             motors.setSpeeds(0,0)
             motors.disable()
@@ -174,8 +175,14 @@ def move_here(location,destination):
 
     return
 
+def stop():
+    motors.setSpeeds(0, 0)
+    motors.disable()
 
-
+if __name__ == '__main__':
+    locat = localization.locat_create()
+    localization.IMU_initialize()
+    look_here(locat,5)
 
     
 
