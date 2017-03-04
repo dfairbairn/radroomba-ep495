@@ -1,6 +1,5 @@
 """
-file: probe_serial.py
-date: February 2017
+file: probe_serial.py date: February 2017
 description: This file contains the code for the task responsible for listening 
     to incoming serial data from the Ludlum probe.
 
@@ -18,10 +17,13 @@ from struct import *
 import wiringpi
 #from dual_mc33926_rpi_4raster import motor
 
+'''
 # For if we wanna keep drivers in a separate directory - can use 'load_source'
 from imp import load_source
 path_to_drivers='raster_driver/'
-load_source('dual_mc33926_rpi_4raster.motor', path_to_drivers) 
+src = load_source('dual_mc33926_rpi_4raster.motor', path_to_drivers) 
+'''
+from dual_mc33926_rpi_4raster import motor
 
 # Need to import a module that will be updating the current estimated location
 # import localization
@@ -29,7 +31,7 @@ load_source('dual_mc33926_rpi_4raster.motor', path_to_drivers)
 # Global variable to track the 'next sweep direction' of the scanner. Starts
 # at 1 (run initialize_raster_scanner() to ensure this is correct and that the
 # scanner is working).
-nxt_raster_dir = 1
+nxt_raster_dir = 0 
 
 scan_fname = "scan_data.txt"
 
@@ -53,15 +55,15 @@ def initialize_raster_scanner():
     motor.enable()
     nxt_raster_dir = 0 # 
     motor.setDirection(nxt_raster_dir)
-    state = 0
     for half_step in range(RASTER_HALF_STEPS):
         motor.toggleSquare(state)
         state = 1 - state
         wiringpi.delayMicroseconds(STEP_DELAY)
     nxt_raster_dir = 1
+    motor.disable()
     return
 
-def do_read_sweep():
+def do_read_sweep(nxt_dir=0):
     """ 
     Ideally, this might be the main function that gets called for reading. The
     main task will decide to initiate a read sweep at some point. This function
@@ -69,17 +71,19 @@ def do_read_sweep():
 
     * V0.1 OF THIS FUNCTION: open a serial probe connection, wait for data, then
     quickly sweep halfway until more data, then all the way across, store two+ readings for the sweep *
-
+    
+    Currently takes nxt_dir as an argument optionally
+    TODO: integrate a global nxt_raster_dir variable
     """
     probe = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, parity=serial.PARITY_NONE, \
                                 stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS)
+    state=0
     motor.enable()
-    state = 0
-    motor.setDirection(nxt_raster_dir)
+    motor.setDirection(nxt_dir)
 
     data = probe.read(15) # garbage read to wait until a dump cycle occurs
 
-    for half_step in range(0.5*RASTER_HALF_STEPS):
+    for half_step in range(int(0.5*RASTER_HALF_STEPS)):
         motor.toggleSquare(state)
         state = 1-state
         wiringpi.delayMicroseconds(STEP_DELAY)
@@ -88,16 +92,23 @@ def do_read_sweep():
     little slow? Then this next probe.read() will cause the scanner to sit in
     the middle for a whole 2 seconds. 
      ** Might be a good reason to do a dedicated serial read task anyways ** """
-    data1 = probe.read(15) 
 
-    for half_step in range(0.5*RASTER_HALF_STEPS):
+    motor.disable()
+    data1 = probe.read(15) 
+    motor.enable()
+
+    for half_step in range(int(0.5*RASTER_HALF_STEPS)):
         motor.toggleSquare(state)
         state = 1-state
         wiringpi.delayMicroseconds(STEP_DELAY)
+    motor.disable()
     data2 = probe.read(15) 
 
+    '''nxt_raster_dir = nxt_raster_dir==0'''
+    
     # Next, acquire current location from the localization module
-    x, y, phi = localization.get_position(location)
+    locat = localization.locat_create()
+    x, y, phi = localization.get_position(locat)
     loc_centr = (x,y,phi)
     loc1 = loc_centr # TODO: do simple orientation math of raster scanner later
     loc2 = loc_centr
@@ -164,6 +175,8 @@ if __name__=="__main__":
     To run the earliest iteration of this code which writes probe data to a 
     file once, executing this file will run this code block.
     """
+
+
 
     '''probe.open()'''
     # Serial Connection configuration
