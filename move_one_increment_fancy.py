@@ -1,6 +1,13 @@
-'''The idea behind this task is to drive the robot forward by one position increment before the task exits smoothly.
-Likely, this increment is the length of the Ludlum GM probe itself, which is 12.9 cm. For some overlap I will, for now,
-assume we want to move forward by 12.4 cm each time.'''
+'''
+file: 'move_one_increment_fancy.py'
+description:
+    The idea behind this task is to drive the robot forward by one position 
+    increment before the task exits smoothly. Likely, this increment is the 
+    length of the Ludlum GM probe itself, which is 12.9 cm. For some overlap 
+    I will, for now, assume we want to move forward by 12.4 cm each time.
+date: Feb 2017
+
+'''
 
 from __future__ import print_function
 import sys

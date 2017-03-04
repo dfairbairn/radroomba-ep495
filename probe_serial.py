@@ -1,10 +1,11 @@
 """
-file: probe_serial.py date: February 2017
+file: probe_serial.py 
 description: This file contains the code for the task responsible for listening 
     to incoming serial data from the Ludlum probe.
 
     The data that is read in is written to a file and tagged with the current
     location data, imported from a different module.
+date: February 2017
 
 """
 
@@ -15,15 +16,9 @@ import localization
 from struct import *
 
 import wiringpi
-#from dual_mc33926_rpi_4raster import motor
-
-'''
-# For if we wanna keep drivers in a separate directory - can use 'load_source'
-from imp import load_source
-path_to_drivers='raster_driver/'
-src = load_source('dual_mc33926_rpi_4raster.motor', path_to_drivers) 
-'''
 from dual_mc33926_rpi_4raster import motor
+# In future:
+# from hwdrivers.raster import motor
 
 # Need to import a module that will be updating the current estimated location
 # import localization
