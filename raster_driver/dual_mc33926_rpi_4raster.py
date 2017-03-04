@@ -2,6 +2,8 @@
 file: 'dual_mc33926_rpi_4raster.py'
 description: Adapted code for using the stepper motor controller with a RPi.
             Uses the correct GPIO pins for our CurieUS/Radroomba project!
+author: Dan McCloskey
+date: Feb 2017
 
 """
 import wiringpi
