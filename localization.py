@@ -10,26 +10,42 @@ import sys
 import time
 import math
 
+'''
+ WILL TRY TO GET THIS WORKING LATER
 from imp import load_source
 path_to_loc_drivers='resources/Adafruit_Python_BNO055/'
 load_source('Adafruit_BNO055', path_to_loc_drivers) 
+'''
+import BNO055
+global bno
+bno = BNO055.BNO055(serial_port='/dev/serial0', rst=18)
 
 def locat_create(x = 0, y = 0, phi = 0):
     """Creates a new dictionary to store the location of the robot. Unless
     otherwise specified, all localization values are initialized to zero."""
-    return {'x': x, 'y':, y, 'phi': phi}
+    return {'x': x, 'y': y, 'phi': phi}
 
 def IMU_initialize():
     """Set up the IMU. This is essentially just copied code from the 'simpletest.py'
     file that Adafruit provides for the IMU"""
+
     # Raspberry Pi configuration with serial UART and RST connected to GPIO 18:
-    bno = BNO055.BNO055(serial_port='/dev/serial0', rst=18)
+ #   bno = BNO055.BNO055(serial_port='/dev/serial0', rst=18)
     # Enable verbose debug logging if -v is passed as a parameter.
     if len(sys.argv) == 2 and sys.argv[1].lower() == '-v':
         logging.basicConfig(level=logging.DEBUG)
     # Initialize the BNO055 and stop if something went wrong.
-    if not bno.begin():
-        raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
+
+    num_failures = 0
+    while(1):
+        try:
+            bno.begin()
+        except RuntimeError:
+            num_failures += 1
+        else:
+            print("Failed " + str(num_failures) + " times before bno.begin() worked.")
+            break
+
     # Print system status and self test result.
     status, self_test, error = bno.get_system_status()
     # Print out an error if system status is in error mode.
@@ -68,8 +84,8 @@ def position_update(locat, encL, encR, phi1, phi2):
 
     # 6 cm radius wheels and 131 encoder edges per rotation yields the magic
     # number used here
-    locat['x'] += sin(phiAve)*encAve*0.28777948
-    locat['y'] += cos(phiAve)*encAve*0.28777948
+    locat['x'] += math.sin(phiAve)*encAve*0.28777948
+    locat['y'] += math.cos(phiAve)*encAve*0.28777948
     locat['phi'] = phi2
     
     return
