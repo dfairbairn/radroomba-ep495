@@ -16,7 +16,7 @@ from imp import load_source
 path_to_loc_drivers='resources/Adafruit_Python_BNO055/'
 load_source('Adafruit_BNO055', path_to_loc_drivers) 
 '''
-import BNO055
+from hwdrivers import BNO055
 global bno
 bno = BNO055.BNO055(serial_port='/dev/serial0', rst=18)
 

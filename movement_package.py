@@ -9,8 +9,8 @@ import wiringpi
 import math
 import numpy
 from localization import *
-from dual_mc33926_rpi import motors, MAX_SPEED
-from Adafruit_BNO055 import BNO055
+from hwdrivers.dual_mc33926_rpi import motors, MAX_SPEED
+#from Adafruit_BNO055 import BNO055
 
 #Python 2 is dumb and gives an error having to do with clearing the stdout buffer due to my use of a try except block.
 #This bit of code will kill the error message
@@ -79,7 +79,7 @@ def look_here(location,phiGoing):
     while phiGoing > 360:
         phiGoing = phiGoing - 360
  #   print('Starting to turn')
-    rotate_speed = MAX_SPEED/6
+    rotate_speed = MAX_SPEED/4
     right_direction = False
     garbage1, garbage2, phiNow = get_position(location)
 
@@ -185,11 +185,76 @@ def move_here(location,destination):
         position_update(location, encoders['left'], encoders['right'], phi1, phi2)
         print(encoders["left"],encoders["right"])
         print(((encoders["left"]+encoders["right"])/2)*0.28777948)
-        get_position()
-        #time.sleep(0.5)
     except:
         motors.setSpeeds(0, 0)
         motors.disable()
+    finally:
+        motors.setSpeeds(0, 0)
+        motors.disable()
+    return
+
+def back_up(locat):
+    #Encoder target (set to be 1 lower than what we ACTUALLY want, as inertia tends to carry the wheels a bit)
+    global target
+    target = 40
+    print('0')
+    try:
+
+        #Can tweak as neccesary (the number to divide MAX_SPEED by determines the duty cycle and must be greater than 1)
+        drive_speed = -(MAX_SPEED//3)
+
+        #Initial angle
+        phi1 = locat['phi']
+
+        #Creating a dictionary (since dictionaries are mutable and so can be modified in functions like, say, the interrupt)
+        #to store the encoder values for both wheels. Later on this *will* be moved into the master task initialization
+        #routine
+        global encoders
+        encoders = {"left": 0, "right": 0}
+
+        #I am going to call the variable indicating when the robot has moved far enough 'far_enough' (to be set true in the
+        #encoder interrupt function)
+        global control_bools
+        control_bools = {"far_enough": False, "left_limit": False, "right_limit": False}
+        print('2')
+        #Enable motors but make sure they aren't moving
+        motors.enable()
+        motors.setSpeeds(0, 0)
+        #Enable interrupt service routines for both left and right wheels (pins can be changed to whatever pins we actually use)
+        wiringpi.wiringPiISR(20, 1, encoder_ISR_L)
+        wiringpi.wiringPiISR(21, 1, encoder_ISR_R)
+
+        #Drive until it is determined that the wheels have moved the appropriate distance. The interrupts will handle speed
+        #adjustments as the bot approaches the desired distance
+        motors.setSpeeds(drive_speed, drive_speed)
+        print('3')
+        while not control_bools["far_enough"]:
+            time.sleep(0.005)
+            pass
+
+            #Update the position of the robot somehow here using the encoder values and likely the IMU as well. If there is an
+            #orientation problem, this could be remedied here by calling some sort of realignment task that driven the wheels
+            #very very slowly in opposite directions until the encoder values are balanced again (this would have to use new
+            #encoder ISRs that could both increment and decrement the values depending on the motor speed, and then check for
+            #similarity between the two encoder values). For now, since the goal is to simply move in a straight line and take
+            #scans, I will hold off on implementing this.
+
+
+        #Make sure the motors are off before the task exits gracefully (they are also dispabled in the ISR, but this is done
+        #here for extra safety)
+        motors.setSpeeds(0, 0)
+        motors.disable()
+        print('4')
+        phi2, garbage1, garbage2 = bno.read_euler()
+        print('4.1')
+        position_update(locat, -encoders['left'], -encoders['right'], phi1, phi2)
+        print('4.2')
+        print(get_position(locat))
+        print('5')
+    except:
+        motors.setSpeeds(0,0)
+        motors.disable()
+        print('you suck asshole')
     finally:
         motors.setSpeeds(0, 0)
         motors.disable()

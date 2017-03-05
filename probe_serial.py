@@ -16,7 +16,7 @@ import localization
 from struct import *
 
 import wiringpi
-from dual_mc33926_rpi_4raster import motor
+from hwdrivers.dual_mc33926_rpi_4raster import motor
 # In future:
 # from hwdrivers.raster import motor
 
