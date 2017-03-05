@@ -81,7 +81,7 @@ def look_here(location,phiGoing):
         phiGoing = phiGoing + 360
     while phiGoing > 360:
         phiGoing = phiGoing - 360
-    print('Starting to turn')
+ #   print('Starting to turn')
     rotate_speed = MAX_SPEED/6
     right_direction = False
     garbage1, garbage2, phiNow = get_position(location)
@@ -89,6 +89,7 @@ def look_here(location,phiGoing):
     #Enable motors but make sure they aren't moving
     motors.enable()
     motors.setSpeeds(0, 0)
+
     # .25 degree buffer, since we assume our step size is small
     if abs(phiNow - phiGoing) <= 0.25:
         return
@@ -100,7 +101,7 @@ def look_here(location,phiGoing):
     while right_direction == False:
         time.sleep(0.005)
         phiNow, garbage1, garbage2 = bno.read_euler()
-        print(phiNow, 'is the currect angle')
+     #   print(phiNow, 'is the currect angle')
         diff = phiNow - phiGoing # could be -359.9 up to 359.9
         if diff < 0:
             diff = diff + 360
@@ -131,13 +132,13 @@ def move_here(location,destination):
     #Encoder target (set to be 1 lower than what we ACTUALLY want, as inertia tends to carry the wheels a bit)
     global target
     target = round(arc_length*3.474882924) - 1
-    print('Target is ',target)
+#    print('Target is ',target)
 
     #Determine the angle the robot must face, and call a function which will rotate the robot in the event
     #that it is not facing that direction already
     destin_angle = math.atan2(deltaX,deltaY)*180/3.1415926535
     look_here(location, destin_angle)
-    print('Trying to advance.')
+ #   print('Trying to advance.')
     try:
         #Can tweak as neccesary (the number to divide MAX_SPEED by determines the duty cycle and must be greater than 1)
         drive_speed = MAX_SPEED//3
@@ -168,7 +169,6 @@ def move_here(location,destination):
         motors.setSpeeds(drive_speed+2, drive_speed)
         while not control_bools["far_enough"]:
             time.sleep(0.005)
-            print(encoders['left'])
             pass
 
             #Update the position of the robot somehow here using the encoder values and likely the IMU as well. If there is an

@@ -84,8 +84,8 @@ def position_update(locat, encL, encR, phi1, phi2):
 
     # 6 cm radius wheels and 131 encoder edges per rotation yields the magic
     # number used here
-    locat['x'] += math.sin(phiAve)*encAve*0.28777948
-    locat['y'] += math.cos(phiAve)*encAve*0.28777948
+    locat['x'] -= math.sin(phiAve)*encAve*0.28777948
+    locat['y'] -= math.cos(phiAve)*encAve*0.28777948
     locat['phi'] = phi2
     
     return
