@@ -15,21 +15,47 @@ import thread
 # are the args intended to be provided to func_name.  
 import time
 import probe_serial
-
+import movement_package as move
+import wiringpi
+#from __future__ import print_function
+from dual_mc33926_rpi_4raster import motor
+from dual_mc33926_rpi import motors, MAX_SPEED
+from Adafruit_BNO055 import BNO055
+from localization import *
 from IR_ADC_reader import read_IR
+from struct import *
+wiringpi.wiringPiSetupGpio()
 
 def straight_line_test():
     """
     Basic straight-line test loop
     """
     # e.g: thread.start_new_thread( <func_name>, (args))
-    thread.start_new_thread( wall_detector_thread, ("Wall Detector task",0.25) )
+  # thread.start_new_thread( wall_detector_thread, ("Wall Detector task",0.25) )
+    # Initialize the raster scanner
+    probe_serial.initialize_raster_scanner()
+    rast_dir = 1
+    # Create location data for the run
+    locat = locat_create()
+    #Initialize the IMU
+    IMU_initialize()
     while True:
         # Read front sensor (0) don't bother tracking last_read measurement (0)
         reading, wall_found = read_IR(0,0)
+        print(wall_found)
+
         if not wall_found:
             # do_read_sweep()
+            probe_serial.do_read_sweep(locat, rast_dir)
+            rast_dir = -rast_dir + 1
+            reading, wall_found = read_IR(0,0)
             # move_one_increment()
+            #For now, let us use forward increments of 14.5cm
+            move.move_here(locat,(locat['x'],locat['y']+14.5))
+            print(locat)
+        else:
+            break
+    return
 
 def wall_detector_thread(threadName, delayTime=0.25):
     """ Loops, checking for front IR sensors indicating wall proximity. """
@@ -49,9 +75,9 @@ def wall_detector_thread(threadName, delayTime=0.25):
 
 def dummy_serial_task(threadName, delayTime):
     """ Placeholder for probe handler task. Could just call probe code."""
-    print threadName," has started up!"
+    print(threadName," has started up!")
     time.sleep(delayTime)
-    print threadName," is exitting."
+    print(threadName," is exitting.")
     return None
 
 def dummy_sensor_task(threadName, delayTime):
@@ -92,4 +118,6 @@ def simple_main_task():
 #  Script portion
 #==============================================================================
 
-simple_()
+if __name__ == '__main__':
+    straight_line_test()
+    

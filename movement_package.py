@@ -71,9 +71,6 @@ def encoder_ISR_R():
     #Exit the ISR
     return
 
-#This will be a global variable later on
-location = {"x": 0, "y": 0, 'phi': 0}
-
 def look_here(location,phiGoing):
     """Attempts to orient the robot so it is facing in the direction specified
     by phiGoing (measured counterclockwise from the y-axis in degrees)"""
@@ -91,7 +88,7 @@ def look_here(location,phiGoing):
     motors.setSpeeds(0, 0)
 
     # .25 degree buffer, since we assume our step size is small
-    if abs(phiNow - phiGoing) <= 0.25:
+    if abs(phiNow - phiGoing) <= 0.15:
         return
     if abs(phiNow - phiGoing) <= 180:
         motors.setSpeeds(rotate_speed, -rotate_speed)
@@ -105,7 +102,7 @@ def look_here(location,phiGoing):
         diff = phiNow - phiGoing # could be -359.9 up to 359.9
         if diff < 0:
             diff = diff + 360
-        if (diff <= 0.25) or (abs(diff - 360.0)<= 0.25):
+        if (diff <= 0.15) or (abs(diff - 360.0)<= 0.15):
             motors.setSpeeds(0,0)
             motors.disable()
             right_direction = True
@@ -131,7 +128,7 @@ def move_here(location,destination):
     
     #Encoder target (set to be 1 lower than what we ACTUALLY want, as inertia tends to carry the wheels a bit)
     global target
-    target = round(arc_length*3.474882924) - 1
+    target = round(arc_length*3.474882924)
 #    print('Target is ',target)
 
     #Determine the angle the robot must face, and call a function which will rotate the robot in the event
@@ -166,7 +163,7 @@ def move_here(location,destination):
 
         #Drive until it is determined that the wheels have moved the appropriate distance. The interrupts will handle speed
         #adjustments as the bot approaches the desired distance
-        motors.setSpeeds(drive_speed+2, drive_speed)
+        motors.setSpeeds(drive_speed, drive_speed)
         while not control_bools["far_enough"]:
             time.sleep(0.005)
             pass

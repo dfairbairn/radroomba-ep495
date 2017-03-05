@@ -79,13 +79,16 @@ def position_update(locat, encL, encR, phi1, phi2):
     # steps at different angles to account for one wheel turning more than the
     # other are possible, and we could work them out later or simply state that
     # this could be left for future iterations.
-    encAve = (encL + encR)//2
-    phiAve = (phi1 + phi2)/2
+    encAve = (encL + encR)/2
+    if abs(phi1 - phi2) >= 180:
+        phiAve = ((phi1+phi2)/2) + 180
+    else:
+        phiAve = (phi1 + phi2)/2
 
     # 6 cm radius wheels and 131 encoder edges per rotation yields the magic
     # number used here
-    locat['x'] -= math.sin(phiAve)*encAve*0.28777948
-    locat['y'] -= math.cos(phiAve)*encAve*0.28777948
+    locat['x'] += math.sin(phiAve*3.1415926535/180)*encAve*0.28777948
+    locat['y'] += math.cos(phiAve*3.1415926535/180)*encAve*0.28777948
     locat['phi'] = phi2
     
     return
