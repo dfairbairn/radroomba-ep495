@@ -54,7 +54,7 @@ def initialize_raster_scanner():
     for half_step in range(RASTER_HALF_STEPS):
         motor.toggleSquare(state)
         state = 1-state
-        wiringpi.delayMicroseconds(STEP_DELAY)
+        wiringpi.delayMicroseconds(STEP_DELAY//2)
     nxt_raster_dir = 1
     motor.disable()
     return
@@ -159,7 +159,7 @@ def save_reading(data, loc):
     if type(data)==type("look up stringtype later"):
         data = extract_counts(data)
     f = open(scan_fname, "a")
-    f.write("%d,%f,%f\n" % (data, loc[0], loc[1]))
+    f.write("%d,%d,%d\n" % (data, loc[0], loc[1]))
     f.close() 
     return
 
@@ -190,7 +190,7 @@ def probe_continuous_read():
         locat = localization.get_position(location)
 
         f = open("scan_data.txt", "a")
-        f.write("%d,%d,%d\n" % (scalarCounts, locat[0], locat[1]))
+        f.write("%d,%f,%f\n" % (scalarCounts, locat[0], locat[1]))
         f.close() 
     probe.close()
     return

@@ -25,7 +25,6 @@ from localization import *
 from IR_ADC_reader import read_IR
 from struct import *
 wiringpi.wiringPiSetupGpio()
-
 def straight_line_test():
     """
     Basic straight-line test loop
@@ -50,6 +49,7 @@ def straight_line_test():
             rast_dir = -rast_dir + 1
             reading, wall_found = read_IR(0,0)
             # move_one_increment()
+        if not wall_found:
             #For now, let us use forward increments of 14.5cm
             move.move_here(locat,(locat['x'],locat['y']+14.5))
             print(locat)
