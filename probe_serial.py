@@ -47,12 +47,13 @@ def initialize_raster_scanner():
     """
     # NEED TO VERIFY WHICH DIRECTION FOR OUR APPARATUS CORRESPONDS TO "LEFT"
     # WILL ASSUME motor.setDirection(0) MEANS LEFT
+    state = 0
     motor.enable()
     nxt_raster_dir = 0 # 
     motor.setDirection(nxt_raster_dir)
     for half_step in range(RASTER_HALF_STEPS):
         motor.toggleSquare(state)
-        state = 1 - state
+        state = 1-state
         wiringpi.delayMicroseconds(STEP_DELAY)
     nxt_raster_dir = 1
     motor.disable()
@@ -76,7 +77,7 @@ def do_read_sweep(nxt_dir=0):
     motor.enable()
     motor.setDirection(nxt_dir)
 
-    data = probe.read(15) # garbage read to wait until a dump cycle occurs
+    data = extract_counts(probe.read(15)) # garbage read to wait until a dump cycle occurs
 
     for half_step in range(int(0.5*RASTER_HALF_STEPS)):
         motor.toggleSquare(state)
@@ -89,7 +90,7 @@ def do_read_sweep(nxt_dir=0):
      ** Might be a good reason to do a dedicated serial read task anyways ** """
 
     motor.disable()
-    data1 = probe.read(15) 
+    data1 = extract_counts(probe.read(15)) - data
     motor.enable()
 
     for half_step in range(int(0.5*RASTER_HALF_STEPS)):
@@ -97,20 +98,44 @@ def do_read_sweep(nxt_dir=0):
         state = 1-state
         wiringpi.delayMicroseconds(STEP_DELAY)
     motor.disable()
-    data2 = probe.read(15) 
+    data2 = extract_counts(probe.read(15)) - data
 
-    '''nxt_raster_dir = nxt_raster_dir==0'''
-    
+
     # Next, acquire current location from the localization module
     locat = localization.locat_create()
     x, y, phi = localization.get_position(locat)
-    loc_centr = (x,y,phi)
-    loc1 = loc_centr # TODO: do simple orientation math of raster scanner later
-    loc2 = loc_centr
+    loc_centr = (x,y,phi) # robot center
+    # The scanner axis seems to roughly be 12 cm ahead of robot centroid and
+    # from center (front IR probe), center of probe at leftmost/rightmost seems
+    # to be +/- 17.75cm in x dir (edge of probe is 7cm beyond that both ways)
+    sign = -1 if dir == 0 else +1
+    loc1 = (x + sign*17.75,y+12.0) 
+    loc2 = (x - sign*17.75,y+12.0)
     save_reading(data1,loc1)
     save_reading(data2,loc2)
+
+    '''nxt_raster_dir = nxt_raster_dir==0'''
     probe.close()
     return
+
+def extract_counts(data):
+    """
+    Takes the serial dump from the Ludlum probe and extracts the current
+    scalar counts value.
+
+    *Params*:
+    - data: a string originating from the Ludlum data dumb
+
+    *Returns*:
+    - counts: an integer value corresponding to the scalar counts
+    """
+    dat = [ord(x) for x in data]
+    counts = dat[4:9]
+    counts.reverse()
+    # Next couple lines convert the hex numbers to decimal.
+    # TODO: use an established normal method for doing this conversion
+    counts = reduce(lambda x,y: x+y, [ counts[i]*(255**i) for i in range(5) ])
+    return counts
 
 def save_reading(data, loc):
     """
@@ -122,14 +147,10 @@ def save_reading(data, loc):
       loc (tuple of floats): Location data (could be just x,y, or x,y,bearing -
         depending on what the localization module outputs)
     """
-    dat = [ord(x) for x in data]
-    scalarCounts = dat[4:9]
-    scalarCounts.reverse()
-    # Next couple lines convert the hex numbers to decimal.
-    # TODO: use an established normal method for doing this conversion
-    scalarCounts = reduce(lambda x,y: x+y, [ scalarCounts[i]*(255**i) for i in range(5) ])
+    if type(data)==type("look up stringtype later"):
+        data = extract_counts(data)
     f = open(scan_fname, "a")
-    f.write("%d,%d,%d\n" % (scalarCounts, loc[0], loc[1]))
+    f.write("%d,%d,%d\n" % (data, loc[0], loc[1]))
     f.close() 
     return
 

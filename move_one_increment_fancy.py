@@ -1,13 +1,6 @@
-'''
-file: 'move_one_increment_fancy.py'
-description:
-    The idea behind this task is to drive the robot forward by one position 
-    increment before the task exits smoothly. Likely, this increment is the 
-    length of the Ludlum GM probe itself, which is 12.9 cm. For some overlap 
-    I will, for now, assume we want to move forward by 12.4 cm each time.
-date: Feb 2017
-
-'''
+'''The idea behind this task is to drive the robot forward by one position increment before the task exits smoothly.
+Likely, this increment is the length of the Ludlum GM probe itself, which is 12.9 cm. For some overlap I will, for now,
+assume we want to move forward by 12.4 cm each time.'''
 
 from __future__ import print_function
 import sys
@@ -46,8 +39,8 @@ def encoder_ISR_L():
             control_bools["far_enough"] = True
             motors.setSpeeds(0,0)
         #Slow thfrom resources/Adafruit_Python_BNO055/Adafruit_BNO055 import BNO055e motors by if we are still waiting on the right wheel
-        else:
-            motors.setSpeeds(MAX_SPEED/10,MAX_SPEED/10)
+ #       else:
+   #         motors.setSpeeds(MAX_SPEED/10,MAX_SPEED/10)
 
     #Exit the ISR
     return
@@ -72,8 +65,8 @@ def encoder_ISR_R():
             control_bools["far_enough"] = True
             motors.setSpeeds(0,0)
         #Slow the motors if we are still waiting on the left wheel
-        else:
-            motors.setSpeeds(MAX_SPEED/10,MAX_SPEED/10)
+    #    else:
+     #       motors.setSpeeds(MAX_SPEED/10,MAX_SPEED/10)
 
     #Exit the ISR
     return
@@ -138,14 +131,16 @@ def move_here(location,destination):
     #Encoder target (set to be 1 lower than what we ACTUALLY want, as inertia tends to carry the wheels a bit)
     global target
     target = round(arc_length*3.474882924) - 1
+    print('Target is ',target)
 
     #Determine the angle the robot must face, and call a function which will rotate the robot in the event
     #that it is not facing that direction already
     destin_angle = math.atan2(deltaX,deltaY)*180/3.1415926535
     look_here(location, destin_angle)
+    print('Trying to advance.')
     try:
         #Can tweak as neccesary (the number to divide MAX_SPEED by determines the duty cycle and must be greater than 1)
-        drive_speed = MAX_SPEED/3
+        drive_speed = MAX_SPEED//3
 
         #Initial angle
         phi1 = location['phi']
@@ -170,9 +165,10 @@ def move_here(location,destination):
 
         #Drive until it is determined that the wheels have moved the appropriate distance. The interrupts will handle speed
         #adjustments as the bot approaches the desired distance
-        motors.setSpeeds(drive_speed, drive_speed+1)
+        motors.setSpeeds(drive_speed+2, drive_speed)
         while not control_bools["far_enough"]:
-            print(encoders['left'],encoders['right'])
+            time.sleep(0.005)
+            print(encoders['left'])
             pass
 
             #Update the position of the robot somehow here using the encoder values and likely the IMU as well. If there is an
@@ -188,10 +184,8 @@ def move_here(location,destination):
         motors.disable()
 
         # Update position using the linear update scheme
-        print('gonna update')
         phi2, garbage1, garbage2 = bno.read_euler()
         position_update(location, encoders['left'], encoders['right'], phi1, phi2)
-        print('I have updated the position master')
         print(encoders["left"],encoders["right"])
         print(((encoders["left"]+encoders["right"])/2)*0.28777948)
         get_position()
@@ -211,7 +205,7 @@ def stop():
 if __name__ == '__main__':
     locat = locat_create()
     IMU_initialize()
-    move_here(locat,(0,10))
+    move_here(locat,(0,25))
 
     
 
