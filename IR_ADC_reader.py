@@ -3,6 +3,10 @@
 # Written by Limor "Ladyada" Fried for Adafruit Industries, (c) 2015
 # This code is released into the public domain
 
+# CHANGELOG: I calibrated this to be the 'forward' IR sensor, which cannot
+# get close enough to a wall for a voltage decrease to be observed at the output.
+# At roughly 1 cm form the wall the reading is around 850, so I set the threshold
+# to 860 to get us a little bit closer. -Dan
 import time
 import os
 
@@ -79,8 +83,7 @@ def read_IR(adc_channel, last_read):
         if abs(probe_adjust) > tolerance:
                 probe_changed = True
 
-                if (IR_probe > 900) or (last_read > 900):
-                    if probe_adjust < end_tolerance:
+                if (IR_probe > 860) or (last_read > 860):
                         print("A wall has been reached.")
                         wall = True
 
@@ -92,16 +95,18 @@ def read_IR(adc_channel, last_read):
 
         return new_read, wall
 
-last_read = 0
 
-while True:
-    result = read_IR(0, last_read) # get result for channel 0
-    last_read = result[0] # Store new last_read
-    print(last_read)
-    print("The wall is", result[1])
-    print(" ")
-    time.sleep(0.25) # wait for a bit
-    if result[1]: # check the wall
-        print("Wall found")
-        break
+
+if __name__ == '__main__':
+        last_read = 0
+        while True:
+            result = read_IR(0, last_read) # get result for channel 0
+            last_read = result[0] # Store new last_read
+            print(last_read)
+            print("The wall is", result[1])
+            print(" ")
+            time.sleep(0.25) # wait for a bit
+            if result[1]: # check the wall
+                print("Wall found")
+                break
 

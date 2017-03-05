@@ -59,7 +59,7 @@ def initialize_raster_scanner():
     motor.disable()
     return
 
-def do_read_sweep(nxt_dir=0):
+def do_read_sweep(locat, nxt_dir=0):
     """ 
     Ideally, this might be the main function that gets called for reading. The
     main task will decide to initiate a read sweep at some point. This function
@@ -72,13 +72,17 @@ def do_read_sweep(nxt_dir=0):
     TODO: integrate a global nxt_raster_dir variable
     """
     probe = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, parity=serial.PARITY_NONE, \
-                                stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS)
+                                stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout = 3)
+
+    try:
+        data = extract_counts(probe.read(15)) # garbage read to wait until a dump cycle occurs
+    except:
+        data = extract_counts('0 0 0 0 0 0 0 0 0 0 0 0 0 0 0')
+        
     state=0
     motor.enable()
     motor.setDirection(nxt_dir)
-
-    data = extract_counts(probe.read(15)) # garbage read to wait until a dump cycle occurs
-
+    
     for half_step in range(int(0.5*RASTER_HALF_STEPS)):
         motor.toggleSquare(state)
         state = 1-state
@@ -90,7 +94,10 @@ def do_read_sweep(nxt_dir=0):
      ** Might be a good reason to do a dedicated serial read task anyways ** """
 
     motor.disable()
-    data1 = extract_counts(probe.read(15)) - data
+    try:
+        data1 = extract_counts(probe.read(15)) - data
+    except:
+        data1 = extract_counts('0 0 0 0 0 0 0 0 0 0 0 0 0 0 0')
     motor.enable()
 
     for half_step in range(int(0.5*RASTER_HALF_STEPS)):
@@ -98,11 +105,14 @@ def do_read_sweep(nxt_dir=0):
         state = 1-state
         wiringpi.delayMicroseconds(STEP_DELAY)
     motor.disable()
-    data2 = extract_counts(probe.read(15)) - data
-
-
+    try:
+        data2 = extract_counts(probe.read(15)) - data1 - data #Changed to minus data1 - Dan March 5
+    except:
+        data2 = extract_counts('0 0 0 0 0 0 0 0 0 0 0 0 0 0 0')
+        
+    #counts = dat[4:9]
     # Next, acquire current location from the localization module
-    locat = localization.locat_create()
+    #locat = localization.locat_create()
     x, y, phi = localization.get_position(locat)
     loc_centr = (x,y,phi) # robot center
     # The scanner axis seems to roughly be 12 cm ahead of robot centroid and
@@ -113,7 +123,6 @@ def do_read_sweep(nxt_dir=0):
     loc2 = (x - sign*17.75,y+12.0)
     save_reading(data1,loc1)
     save_reading(data2,loc2)
-
     '''nxt_raster_dir = nxt_raster_dir==0'''
     probe.close()
     return
@@ -150,7 +159,7 @@ def save_reading(data, loc):
     if type(data)==type("look up stringtype later"):
         data = extract_counts(data)
     f = open(scan_fname, "a")
-    f.write("%d,%d,%d\n" % (data, loc[0], loc[1]))
+    f.write("%d,%f,%f\n" % (data, loc[0], loc[1]))
     f.close() 
     return
 
