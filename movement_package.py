@@ -74,6 +74,7 @@ def encoder_ISR_R():
 def look_here(location,phiGoing):
     """Attempts to orient the robot so it is facing in the direction specified
     by phiGoing (measured counterclockwise from the y-axis in degrees)"""
+    bearing_update(location)
     while phiGoing < 0:
         phiGoing = phiGoing + 360
     while phiGoing > 360:
@@ -87,6 +88,7 @@ def look_here(location,phiGoing):
     motors.enable()
     motors.setSpeeds(0, 0)
 
+
     # .25 degree buffer, since we assume our step size is small
     if abs(phiNow - phiGoing) <= 0.15:
         return
@@ -96,23 +98,79 @@ def look_here(location,phiGoing):
         motors.setSpeeds(-rotate_speed, rotate_speed)
     #Drive until it is determined that the robot is facing the right direction (determined by polling the IMU)
     while right_direction == False:
-        time.sleep(0.005)
+        time.sleep(0.01)
         phiNow, garbage1, garbage2 = bno.read_euler()
-     #   print(phiNow, 'is the currect angle')
+        print(phiNow, 'is the currect angle')
         diff = phiNow - phiGoing # could be -359.9 up to 359.9
         if diff < 0:
             diff = diff + 360
-        if (diff <= 0.15) or (abs(diff - 360.0)<= 0.15):
-            motors.setSpeeds(0,0)
-            motors.disable()
-            right_direction = True
         if diff > 180:
             motors.setSpeeds(rotate_speed,-rotate_speed)
         elif diff <= 180:
             motors.setSpeeds(-rotate_speed,rotate_speed)
+        if (diff <= 0.15) or (abs(diff - 360.0)<= 0.15):
+            motors.setSpeeds(0,0)
+            motors.disable()
+            right_direction = True
 
+    time.sleep(0.02)
     bearing_update(location, phiNow)
     return
+        
+def pivot(location,dPhi):
+    '''Pivots the robot using one drive wheel through a total angle of dPhi.
+    Drives with the left wheel if dPhi is positive, drives with the right wheel
+    if dPhi is negative.'''
+
+    bearing_update(location)
+    if dPhi == 0:
+        return
+    right_direction = False
+    phi1 = location['phi']
+
+    phiGoing = dPhi + phi1
+     
+    phiGoing = phiGoing % 360
+    motors.enable()
+    if dPhi > 0:
+        speedL = MAX_SPEED//3
+        speedR = 0
+
+    else:
+        speedL = 0
+        speedR = MAX_SPEED//3
+
+    motors.setSpeeds(speedL,speedR)
+    while right_direction is False:
+        time.sleep(0.01)
+        currPhi, garbage1, garbage2 = bno.read_euler()
+        print(currPhi,'is the current angle')
+        diff = currPhi - phiGoing
+        if diff < 0:
+            print('**SUBZERO MORTAL KOMBAT')#
+            diff = diff + 360
+     #   if dPhi > 0:
+     #       if currPhi > target:
+     #           motors.setSpeeds(-speedL,0)
+     #       else:
+     #           motors.setSpeeds(speedL,0)
+     #   elif dPhi < 0:
+     #       if currPhi < target:
+     #           motors.setSpeeds(0,-speedR)
+     #       else:
+     #           motors.setSpeeds(0,speedR)
+        if (diff <= 0.15) or (abs(diff - 360.0)<= 0.15):
+            print('**found sorry, could not handle reading this')
+            motors.setSpeeds(0,0)
+            motors.disable()
+            right_direction = True
+        else:
+            print('**else')
+            motors.setSpeeds(speedL,speedR)
+    time.sleep(0.02)
+    pivot_update(location,currPhi)
+    return
+            
         
     
 
@@ -196,8 +254,7 @@ def move_here(location,destination):
 def back_up(locat):
     #Encoder target (set to be 1 lower than what we ACTUALLY want, as inertia tends to carry the wheels a bit)
     global target
-    target = 40
-    print('0')
+    target = 42
     try:
 
         #Can tweak as neccesary (the number to divide MAX_SPEED by determines the duty cycle and must be greater than 1)
@@ -216,7 +273,6 @@ def back_up(locat):
         #encoder interrupt function)
         global control_bools
         control_bools = {"far_enough": False, "left_limit": False, "right_limit": False}
-        print('2')
         #Enable motors but make sure they aren't moving
         motors.enable()
         motors.setSpeeds(0, 0)
@@ -227,7 +283,6 @@ def back_up(locat):
         #Drive until it is determined that the wheels have moved the appropriate distance. The interrupts will handle speed
         #adjustments as the bot approaches the desired distance
         motors.setSpeeds(drive_speed, drive_speed)
-        print('3')
         while not control_bools["far_enough"]:
             time.sleep(0.005)
             pass
@@ -244,13 +299,11 @@ def back_up(locat):
         #here for extra safety)
         motors.setSpeeds(0, 0)
         motors.disable()
-        print('4')
+        
         phi2, garbage1, garbage2 = bno.read_euler()
-        print('4.1')
         position_update(locat, -encoders['left'], -encoders['right'], phi1, phi2)
-        print('4.2')
+
         print(get_position(locat))
-        print('5')
     except:
         motors.setSpeeds(0,0)
         motors.disable()

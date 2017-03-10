@@ -30,7 +30,8 @@ wiringpi.wiringPiSetupGpio()
 
 # Temporarily: global flag indicating a scan sweep is in progress
 scanning=False
-
+direction = 1
+rast_dir = 1
 # Create location data for the run
 locat = locat_create()
 # Initialize the IMU
@@ -45,7 +46,8 @@ def straight_line_test():
     #thread.start_new_thread( wall_detector_thread, ("Wall Detector task",0.25) )
     # Initialize the raster scanner
     probe.initialize_raster_scanner()
-    rast_dir = 1
+    global direction
+    global rast_dir
     while True:
         # Read front sensor (0) don't bother tracking last_read measurement (0)
         reading, wall_found = read_IR(0,0)
@@ -60,11 +62,80 @@ def straight_line_test():
             reading, wall_found = read_IR(0,0)
             # move_one_increment()
         if not wall_found:
-            #For now, let us use forward increments of 14.5cm
-            move.move_here(locat,(locat['x'],locat['y']+14.5))
+            #For now, let us use forward increments of 12.5cm
+            move.move_here(locat,(locat['x'],locat['y']+12.5*direction))
+            print(locat)
+        else:
+            turn_routine()
+
+        
+    return
+
+def turn_scan(up_or_down):
+    global rast_dir
+    i = 0
+    dx = 12.5
+    if up_or_down:
+        dPhi = -22.50
+    else:
+        dPhi = 22.50
+    while i<2:
+        i += 1
+        # Read front sensor (0) don't bother tracking last_read measurement (0)
+        reading, wall_found = read_IR(0,0)
+        print(wall_found)
+
+        if not wall_found:
+            # do_read_sweep()
+            scanning=True
+            probe.do_read_sweep(locat, rast_dir)
+            scanning=False
+            rast_dir = -rast_dir + 1
+            reading, wall_found = read_IR(0,0)
+            # move_one_increment()
+        if not wall_found:
+            #For now, let us use forward increments of 12.5cm
+            move.move_here(locat,(locat['x']+dx,locat['y']))
             print(locat)
         else:
             break
+    while i < 4:
+        i += 1
+        reading, wall_found = read_IR(0,0)
+        print(wall_found)
+
+        if not wall_found:
+            print('About to pivot')
+            move.pivot(locat,dPhi)
+            scanning = True
+            probe.do_read_sweep(locat, rast_dir)
+            scanning = False
+            rast_dir = -rast_dir + 1
+            print(locat)
+    return
+
+def turn_routine():
+    '''This is currently a naive turning routine. Once the robot has detected
+        a wall and stopped, This function can be called to turn it around.
+        First the robot will back up so it has space to turn, turn 90 degrees
+        scan a bit, and turn 90 degrees again. The final position should be one
+        robot width to the side, and facing away from the detected wall'''
+    global direction
+    move.back_up(locat)
+    
+    if (0 <= locat['phi'] and locat['phi'] < 90) or (270 <= locat['phi'] and locat['phi'] <= 360):
+    
+        move.look_here(locat,90)
+        turn_scan(False)
+        move.look_here(locat,180)
+
+    else:
+
+        move.look_here(locat,90)
+        turn_scan(True)
+        move.look_here(locat,0)
+        
+    direction = -direction
     return
 
 def wall_detector_thread(threadName, delayTime=0.25):

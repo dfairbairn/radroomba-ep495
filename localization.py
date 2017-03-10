@@ -60,6 +60,7 @@ def bearing_update(locat, phi = None):
     calling this function will initiate an IMU poll. However, if this has already
     been done, then the bearing is simply updated to reflect the result of a
     previous poll."""
+    
     if phi is None:
         # Read the Euler angles for heading, roll, pitch (all in degrees).
         heading, roll, pitch = bno.read_euler()
@@ -91,6 +92,16 @@ def position_update(locat, encL, encR, phi1, phi2):
     locat['y'] += math.cos(phiAve*3.1415926535/180)*encAve*0.28777948
     locat['phi'] = phi2
     
+    return
+
+def pivot_update(locat,phi2):
+    '''Updates robot x,y,phi if a one-wheeledpivot maneuver was undertaken'''
+
+    dx = 22.75*(math.sin(phi2*3.1415926535/180) - math.sin(locat['phi']*3.1415926535/180))
+    dy = 22.75*(math.cos(phi2*3.1415926535/180) - math.cos(locat['phi']*3.1415926535/180))
+    locat['x'] += dx
+    locat['y'] += dy
+    locat['phi'] = phi2
     return
 
 def get_position(locat):

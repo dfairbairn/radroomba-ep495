@@ -25,7 +25,7 @@ import logging
 import sys
 import time
 
-from Adafruit_BNO055 import BNO055
+from hwdrivers import BNO055
 
 
 # Create and configure the BNO sensor connection.  Make sure only ONE of the
@@ -89,4 +89,4 @@ while True:
     # in meters per second squared):
     #x,y,z = bno.read_gravity()
     # Sleep for a second until the next reading.
-    time.sleep(1)
+    time.sleep(0.01)
