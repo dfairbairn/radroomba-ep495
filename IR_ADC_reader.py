@@ -50,7 +50,7 @@ def readadc(adcnum, clockpin, mosipin, misopin, cspin):
         return adcout
 
 # read value from the IR sensor
-def read_IR(adc_channel, last_read):
+def read_IR(adc_channel, last_read, cutoff = 800):
         # Input which channel of the ADC the function should read from
         # last_read keeps track of the last potentiometer value (global variable I think)
 
@@ -83,7 +83,7 @@ def read_IR(adc_channel, last_read):
         if abs(probe_adjust) > tolerance:
                 probe_changed = True
 
-                if (IR_probe > 860) or (last_read > 860):
+                if (IR_probe > cutoff) or (last_read > cutoff):
                         print("A wall has been reached.")
                         wall = True
 

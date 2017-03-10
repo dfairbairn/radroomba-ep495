@@ -13,6 +13,7 @@ date: February 2017
 import time
 import serial
 import localization
+import math
 from struct import *
 
 import wiringpi
@@ -115,12 +116,13 @@ def do_read_sweep(locat, nxt_dir=0):
     #locat = localization.locat_create()
     x, y, phi = localization.get_position(locat)
     loc_centr = (x,y,phi) # robot center
+    phirad = phi*3.1415926535/180
     # The scanner axis seems to roughly be 12 cm ahead of robot centroid and
     # from center (front IR probe), center of probe at leftmost/rightmost seems
     # to be +/- 17.75cm in x dir (edge of probe is 7cm beyond that both ways)
     sign = -1 if dir == 0 else +1
-    loc1 = (x + sign*17.75,y+12.0) 
-    loc2 = (x - sign*17.75,y+12.0)
+    loc1 = (x + sign*17.75*math.cos(phirad) + 12.0*math.sin(phirad),y+12.0*math.cos(phirad) - sign*17.75*math.sin(phirad)) 
+    loc2 = (x - sign*17.75*math.cos(phirad) + 12.0*math.sin(phirad),y+12.0*math.cos(phirad) + sign*17.75*math.sin(phirad))
     save_reading(data1,loc1)
     save_reading(data2,loc2)
     '''nxt_raster_dir = nxt_raster_dir==0'''
