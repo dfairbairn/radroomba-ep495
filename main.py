@@ -26,8 +26,7 @@ from localization import *
 from IR_ADC_reader import read_IR
 from struct import *
 
-wiringpi.wiringPiSetupGpio()
-
+#wiringpi.wiringPiSetupGpio()
 # Temporarily: global flag indicating a scan sweep is in progress
 scanning=False
 direction = 1

@@ -11,24 +11,28 @@ import numpy
 from localization import *
 from hwdrivers.dual_mc33926_rpi import motors, MAX_SPEED
 #from Adafruit_BNO055 import BNO055
-
+wiringpi.wiringPiSetupGpio()
 #Python 2 is dumb and gives an error having to do with clearing the stdout buffer due to my use of a try except block.
 #This bit of code will kill the error message
 sys.excepthook = lambda *args: None
-
+global encoders
+encoders = {'left': 0,'right': 0}
 #ISR
 '''Handles the motor encoder counter incrementing and, when the robot has moved far enough, disables the motors.'''
 
+global target
+target = 10000
 def encoder_ISR_L():
     #First things first, increment the left encoder
-    global encoders
+    #global encoders
     encoders["left"] += 1
-
+ #   print(encoders)
+ #   print()
     #Wheels are 6 cm in radius, so it takes 0.32892 rotations to travel 12.4 cm. 131 encoder edges per rotation so
     #43.08 encoder edges to reach the desired position. Round down to 43, but every 10 increments add an extra increment
     #to keep an accurate record of total distance moved.
-    if encoders["left"] % 10 == 0:
-        encoders["left"] += 1
+   # if encoders["left"] % 10 == 0:
+   #     encoders["left"] += 1
 
     #Did this wheel go far enough? If it did but the other wheel hasnt yet, slow the robot way down, since the other
     #wheel is likely to reach the goal *very* soon, and we want to avoid inertia-related overshooting if possible
@@ -39,22 +43,23 @@ def encoder_ISR_L():
             control_bools["far_enough"] = True
             motors.setSpeeds(0,0)
         #Slow thfrom resources/Adafruit_Python_BNO055/Adafruit_BNO055 import BNO055e motors by if we are still waiting on the right wheel
- #       else:
-   #         motors.setSpeeds(MAX_SPEED/10,MAX_SPEED/10)
+    #     else:
+    #         motors.setSpeeds(MAX_SPEED/10,MAX_SPEED/10)
 
     #Exit the ISR
     return
 
 def encoder_ISR_R():
     #First things first, increment the left encoder
-    global encoders
+ #   global encoders
     encoders["right"] += 1
-
+  #  print(encoders)
+  #  print()
     #Wheels are 6 cm in radius, so it takes 0.32892 rotations to travel 12.4 cm. 131 encoder edges per rotation so
     #43.08 encoder edges to reach the desired position. Round down to 43, but every 10 add an extra increment to keep
     #an accurate record of total distance moved.
-    if encoders["right"] % 10 == 0:
-        encoders["right"] += 1
+#    if encoders["right"] % 10 == 0:
+#        encoders["right"] += 1
    # print('R:',encoders["left"],'R',encoders["right"],'\n')
     #Did this wheel go far enough? If it did but the other wheel hasnt yet, slow the robot way down, since the other
     #wheel is likely to reach the goal *very* soon, and we want to avoid inertia-related overshooting if possible
@@ -80,7 +85,7 @@ def look_here(location,phiGoing):
     while phiGoing > 360:
         phiGoing = phiGoing - 360
  #   print('Starting to turn')
-    rotate_speed = MAX_SPEED/4
+    rotate_speed = MAX_SPEED//3
     right_direction = False
     garbage1, garbage2, phiNow = get_position(location)
 
@@ -133,12 +138,12 @@ def pivot(location,dPhi):
     phiGoing = phiGoing % 360
     motors.enable()
     if dPhi > 0:
-        speedL = MAX_SPEED//3
+        speedL = MAX_SPEED//2
         speedR = 0
 
     else:
         speedL = 0
-        speedR = MAX_SPEED//3
+        speedR = MAX_SPEED//2
 
     motors.setSpeeds(speedL,speedR)
     while right_direction is False:
@@ -171,7 +176,12 @@ def pivot(location,dPhi):
     pivot_update(location,currPhi)
     return
             
-        
+def move_forward(num_encoder_ticks):
+    """
+
+    """        
+    global target
+    target = num_encoder_ticks
     
 
 def move_here(location,destination):
@@ -185,9 +195,9 @@ def move_here(location,destination):
     arc_length = math.sqrt(deltaX**2 + deltaY**2)
     
     #Encoder target (set to be 1 lower than what we ACTUALLY want, as inertia tends to carry the wheels a bit)
-    global target
-    target = round(arc_length*3.474882924)
-#    print('Target is ',target)
+#    global target
+#    target = round(arc_length*3.474882924)
+
 
     #Determine the angle the robot must face, and call a function which will rotate the robot in the event
     #that it is not facing that direction already
@@ -200,13 +210,15 @@ def move_here(location,destination):
 
         #Initial angle
         phi1 = location['phi']
-
         #Creating a dictionary (since dictionaries are mutable and so can be modified in functions like, say, the interrupt)
         #to store the encoder values for both wheels. Later on this *will* be moved into the master task initialization
         #routine
         global encoders
-        encoders = {"left": 0, "right": 0}
-
+        encoders['left'] = 0
+        encoders['right'] = 0
+        global target
+        target = (arc_length*3.474882924)//1
+        print('Target is ',target)
         #I am going to call the variable indicating when the robot has moved far enough 'far_enough' (to be set true in the
         #encoder interrupt function)
         global control_bools
@@ -216,14 +228,15 @@ def move_here(location,destination):
         motors.enable()
         motors.setSpeeds(0, 0)
         #Enable interrupt service routines for both left and right wheels (pins can be changed to whatever pins we actually use)
-        wiringpi.wiringPiISR(20, 2, encoder_ISR_L)
-        wiringpi.wiringPiISR(21, 2, encoder_ISR_R)
+     #   wiringpi.wiringPiISR(20, wiringpi.INT_EDGE_RISING, encoder_ISR_L)
+     #   wiringpi.wiringPiISR(21, wiringpi.INT_EDGE_RISING, encoder_ISR_R)
 
         #Drive until it is determined that the wheels have moved the appropriate distance. The interrupts will handle speed
         #adjustments as the bot approaches the desired distance
         motors.setSpeeds(drive_speed, drive_speed)
         while not control_bools["far_enough"]:
             time.sleep(0.005)
+	   # print(encoders['left'],encoders['right'])
             pass
 
             #Update the position of the robot somehow here using the encoder values and likely the IMU as well. If there is an
@@ -241,8 +254,9 @@ def move_here(location,destination):
         # Update position using the linear update scheme
         phi2, garbage1, garbage2 = bno.read_euler()
         position_update(location, encoders['left'], encoders['right'], phi1, phi2)
-        print(encoders["left"],encoders["right"])
+   #     print(encoders["left"],encoders["right"])
         print(((encoders["left"]+encoders["right"])/2)*0.28777948)
+        target = 10000
     except:
         motors.setSpeeds(0, 0)
         motors.disable()
@@ -254,7 +268,7 @@ def move_here(location,destination):
 def back_up(locat):
     #Encoder target (set to be 1 lower than what we ACTUALLY want, as inertia tends to carry the wheels a bit)
     global target
-    target = 42
+    target = 56 
     try:
 
         #Can tweak as neccesary (the number to divide MAX_SPEED by determines the duty cycle and must be greater than 1)
@@ -267,7 +281,8 @@ def back_up(locat):
         #to store the encoder values for both wheels. Later on this *will* be moved into the master task initialization
         #routine
         global encoders
-        encoders = {"left": 0, "right": 0}
+        encoders['left'] = 0
+	encoders['right'] = 0
 
         #I am going to call the variable indicating when the robot has moved far enough 'far_enough' (to be set true in the
         #encoder interrupt function)
@@ -277,8 +292,8 @@ def back_up(locat):
         motors.enable()
         motors.setSpeeds(0, 0)
         #Enable interrupt service routines for both left and right wheels (pins can be changed to whatever pins we actually use)
-        wiringpi.wiringPiISR(20, 1, encoder_ISR_L)
-        wiringpi.wiringPiISR(21, 1, encoder_ISR_R)
+        wiringpi.wiringPiISR(20, wiringpi.INT_EDGE_RISING, encoder_ISR_L)
+        wiringpi.wiringPiISR(21, wiringpi.INT_EDGE_RISING, encoder_ISR_R)
 
         #Drive until it is determined that the wheels have moved the appropriate distance. The interrupts will handle speed
         #adjustments as the bot approaches the desired distance
@@ -304,6 +319,7 @@ def back_up(locat):
         position_update(locat, -encoders['left'], -encoders['right'], phi1, phi2)
 
         print(get_position(locat))
+        target = 10000
     except:
         motors.setSpeeds(0,0)
         motors.disable()
@@ -312,7 +328,9 @@ def back_up(locat):
         motors.setSpeeds(0, 0)
         motors.disable()
     return
-
+#Enable interrupt service routines for both left and right wheels (pins can be changed to whatever pins we actually use)
+wiringpi.wiringPiISR(20, wiringpi.INT_EDGE_RISING, encoder_ISR_L)
+wiringpi.wiringPiISR(21, wiringpi.INT_EDGE_RISING, encoder_ISR_R)
 def stop():
     motors.setSpeeds(0, 0)
     motors.disable()

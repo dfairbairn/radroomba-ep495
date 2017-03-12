@@ -263,10 +263,11 @@ class BNO055(object):
             # Read acknowledgement response (2 bytes).
             resp = bytearray(self._serial.read(2))
             logger.debug('Serial receive: 0x{0}'.format(binascii.hexlify(resp)))
-            if resp is not (None) and len(resp) == 2:
+            if resp is None or len(resp) != 2:
                 # Stop if there's no bus error (0xEE07 response) and return response bytes.
-                if not (resp[0] == 0xEE and resp[1] == 0x07):
-                    return resp
+                raise RuntimeError('Serial timeout error say we!')
+            if not (resp[0] == 0xEE and resp[1] == 0x07):
+                return resp
             # Else there was a bus error so resend, as recommended in UART app
             # note at:
             #   http://ae-bst.resource.bosch.com/media/products/dokumente/bno055/BST-BNO055-AN012-00.pdf

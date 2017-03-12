@@ -50,7 +50,7 @@ def readadc(adcnum, clockpin, mosipin, misopin, cspin):
         return adcout
 
 # read value from the IR sensor
-def read_IR(adc_channel, last_read, cutoff = 800):
+def read_IR(adc_channel, last_read, cutoff = 750):
         # Input which channel of the ADC the function should read from
         # last_read keeps track of the last potentiometer value (global variable I think)
 
