@@ -10,13 +10,17 @@ import math
 import numpy
 from localization import *
 from hwdrivers.dual_mc33926_rpi import motors, MAX_SPEED
+
 #from Adafruit_BNO055 import BNO055
 wiringpi.wiringPiSetupGpio()
+
 #Python 2 is dumb and gives an error having to do with clearing the stdout buffer due to my use of a try except block.
 #This bit of code will kill the error message
 sys.excepthook = lambda *args: None
+
 global encoders
 encoders = {'left': 0,'right': 0}
+
 #ISR
 '''Handles the motor encoder counter incrementing and, when the robot has moved far enough, disables the motors.'''
 
@@ -138,12 +142,12 @@ def pivot(location,dPhi):
     phiGoing = phiGoing % 360
     motors.enable()
     if dPhi > 0:
-        speedL = MAX_SPEED//2
+        speedL = MAX_SPEED//3
         speedR = 0
 
     else:
         speedL = 0
-        speedR = MAX_SPEED//2
+        speedR = MAX_SPEED//3
 
     motors.setSpeeds(speedL,speedR)
     while right_direction is False:
@@ -176,13 +180,7 @@ def pivot(location,dPhi):
     pivot_update(location,currPhi)
     return
             
-def move_forward(num_encoder_ticks):
-    """
-
-    """        
-    global target
-    target = num_encoder_ticks
-    
+   
 
 def move_here(location,destination):
     """Attempts to move the robot to a specified destination along the shortest
@@ -291,10 +289,7 @@ def back_up(locat):
         #Enable motors but make sure they aren't moving
         motors.enable()
         motors.setSpeeds(0, 0)
-        #Enable interrupt service routines for both left and right wheels (pins can be changed to whatever pins we actually use)
-        wiringpi.wiringPiISR(20, wiringpi.INT_EDGE_RISING, encoder_ISR_L)
-        wiringpi.wiringPiISR(21, wiringpi.INT_EDGE_RISING, encoder_ISR_R)
-
+        
         #Drive until it is determined that the wheels have moved the appropriate distance. The interrupts will handle speed
         #adjustments as the bot approaches the desired distance
         motors.setSpeeds(drive_speed, drive_speed)
@@ -328,9 +323,11 @@ def back_up(locat):
         motors.setSpeeds(0, 0)
         motors.disable()
     return
+
 #Enable interrupt service routines for both left and right wheels (pins can be changed to whatever pins we actually use)
 wiringpi.wiringPiISR(20, wiringpi.INT_EDGE_RISING, encoder_ISR_L)
 wiringpi.wiringPiISR(21, wiringpi.INT_EDGE_RISING, encoder_ISR_R)
+
 def stop():
     motors.setSpeeds(0, 0)
     motors.disable()
