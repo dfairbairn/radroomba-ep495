@@ -9,7 +9,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-def read_robo_counts(fname_csv):
+data_path="data/"
+clean1=data_path+"clean_scan_1.csv"
+clean2=data_path+"clean_scan_2.csv"
+clean3=data_path+"clean_scan_3.csv"
+dirty1=data_path+"dirty_scan_1.csv"
+dirty2=data_path+"dirty_scan_2.csv"
+dirty3=data_path+"dirty_scan_3.csv"
+
+def read_counts(fname_csv):
     """
     
     """
@@ -21,17 +29,18 @@ def read_robo_counts(fname_csv):
     counts = []
     for ln in f:
         ci,xi,yi = (ln.split('\n')[0]).split(',') 
-        x.append(xi)
-        y.append(yi)
-        counts.append(ci)
-    return x,y,counts
+        x.append(float(xi))
+        y.append(float(yi))
+        counts.append(int(ci))
+    # Since I want these as useful arrays, I'll go from list to array now..
+    return np.array(x),np.array(y),np.array(counts)
 
 def histo_radmap(fname_csv):
     """
     Use a cheap trick to try to count the number counts vs x/y positions by 
     spawning multiple x,y points for each count at that location
     """
-    x,y,counts = read_robo_counts(fname_csv)
+    x,y,counts = read_counts(fname_csv)
     x_final, y_final = ([], [])
     for i,ci in enumerate(counts):
         for j in range(int(ci)):
@@ -45,22 +54,26 @@ def radmap(fname_csv):
     """
     Makes a very simple color map of the given csv file's "counts/x/y" data.
     """
-    dat = pd.read_csv(fname_csv)
-    plt.pcolor(dat['x'].as_matrix(),dat['y'].as_matrix(),dat['counts'].as_matrix())
+    x,y,counts = read_counts(fname_csv)
+    X,Y = np.meshgrid(x,y)
+    Cnts = X*0
+
+    plt.pcolor(X,Y,Cnts)
     plt.colorbar()
     plt.savefigure(fname_csv+".png")
 
 if __name__=="__main__":
     print("Oh hai, Mark!")
 
-    histo_radmap('clean_scan_1.csv')
+    #histo_radmap('clean_scan_1.csv')
+    radmap(clean1)
+
     '''
-    radmap('clean_scan_1.csv')
-    radmap('clean_scan_2.csv')
-    radmap('clean_scan_3.csv')
-    radmap('dirty_scan_1.csv')
-    radmap('dirty_scan_2.csv')
-    radmap('dirty_scan_3.csv')
+    radmap(clean2)
+    radmap(clean3)
+    radmap(dirty1)
+    radmap(dirty2)
+    radmap(dirty3)
 
     '''
 
