@@ -161,6 +161,10 @@ def save_reading(data, loc):
     if type(data)==type("look up stringtype later"):
         data = extract_counts(data)
     f = open(scan_fname, "a")
+    # First line of the file: give headings to the data columns
+    if f.tell() == 0:
+        f.write("counts,x,y\n")
+    # Write the actual data values to the file
     f.write("%d,%d,%d\n" % (data, loc[0], loc[1]))
     f.close() 
     return
@@ -191,7 +195,10 @@ def probe_continuous_read():
         # location = localization.get_curr_loc()
         locat = localization.get_position(location)
 
-        f = open("scan_data.txt", "a")
+        f = open(scan_fname, "a")
+        # First line of the file: give headings to the data columns
+        if f.tell() == 0:
+            f.write("counts,x,y\n")
         f.write("%d,%f,%f\n" % (scalarCounts, locat[0], locat[1]))
         f.close() 
     probe.close()
@@ -202,8 +209,6 @@ if __name__=="__main__":
     To run the earliest iteration of this code which writes probe data to a 
     file once, executing this file will run this code block.
     """
-
-
 
     '''probe.open()'''
     # Serial Connection configuration
