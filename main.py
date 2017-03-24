@@ -75,9 +75,9 @@ def turn_scan(up_or_down):
     i = 0
     dx = 12.5
     if up_or_down:
-        dPhi = -22.50
+        dPhi = -15.0
     else:
-        dPhi = 22.50
+        dPhi = 15.0
     while i<2:
         i += 1
         # Read front sensor (0) don't bother tracking last_read measurement (0)
@@ -97,8 +97,13 @@ def turn_scan(up_or_down):
             move.move_here(locat,(locat['x']+dx,locat['y']))
             print(locat)
         else:
-            break
-    while i < 4:
+           break
+
+    scanning=True
+    probe.do_read_sweep(locat, rast_dir)
+    scanning=False
+    rast_dir = -rast_dir + 1
+    while i < 5:
         i += 1
         reading, wall_found = read_IR(0,0)
         print(wall_found)

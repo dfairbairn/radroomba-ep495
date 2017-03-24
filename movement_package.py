@@ -109,7 +109,7 @@ def look_here(location,phiGoing):
     while right_direction == False:
         time.sleep(0.01)
         phiNow, garbage1, garbage2 = bno.read_euler()
-        print(phiNow, 'is the currect angle')
+        print(phiNow, 'is the current angle')
         diff = phiNow - phiGoing # could be -359.9 up to 359.9
         if diff < 0:
             diff = diff + 360
@@ -266,7 +266,7 @@ def move_here(location,destination):
 def back_up(locat):
     #Encoder target (set to be 1 lower than what we ACTUALLY want, as inertia tends to carry the wheels a bit)
     global target
-    target = 56 
+    target = 45 
     try:
 
         #Can tweak as neccesary (the number to divide MAX_SPEED by determines the duty cycle and must be greater than 1)
@@ -318,7 +318,7 @@ def back_up(locat):
     except:
         motors.setSpeeds(0,0)
         motors.disable()
-        print('you suck asshole')
+        print('Exception in backup procedure')
     finally:
         motors.setSpeeds(0, 0)
         motors.disable()
