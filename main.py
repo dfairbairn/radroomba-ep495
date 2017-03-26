@@ -37,6 +37,7 @@ locat = locat_create()
 IMU_initialize()
 
 
+
 def straight_line_test():
     """
     Basic straight-line test loop
@@ -47,6 +48,10 @@ def straight_line_test():
     probe.initialize_raster_scanner()
     global direction
     global rast_dir
+    
+    # TODO: implement a 'final check' when we've reached bottom right 
+    turn_counter = 0
+
     while True:
         # Read front sensor (0) don't bother tracking last_read measurement (0)
         reading, wall_found = read_IR(0,0)
@@ -65,20 +70,22 @@ def straight_line_test():
             move.move_here(locat,(locat['x'],locat['y']+12.5*direction))
             print(locat)
         else:
+            turn_counter += 1
+            if turn_counter >= 6:
+                print("Reached 6 walls!")
+                break
             turn_routine()
-
-        
     return
 
 def turn_scan(up_or_down):
     global rast_dir
     i = 0
-    dx = 12.5
+    dx = 10.0
     if up_or_down:
         dPhi = -15.0
     else:
         dPhi = 15.0
-    while i<2:
+    while i<1:
         i += 1
         # Read front sensor (0) don't bother tracking last_read measurement (0)
         reading, wall_found = read_IR(0,0)
@@ -103,7 +110,7 @@ def turn_scan(up_or_down):
     probe.do_read_sweep(locat, rast_dir)
     scanning=False
     rast_dir = -rast_dir + 1
-    while i < 5:
+    while i < 4:
         i += 1
         reading, wall_found = read_IR(0,0)
         print(wall_found)

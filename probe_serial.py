@@ -29,7 +29,7 @@ from hwdrivers.dual_mc33926_rpi_4raster import motor
 # scanner is working).
 nxt_raster_dir = 0 
 
-scan_fname = "scan_data.csv"
+scan_fname = "scan_data.txt"
 
 #34.4 cm so sleep for 3.44 seconds until scanner reaches opposite edge 
 # of the rail. Need 1147 steps total (can adjust this later)
