@@ -84,9 +84,9 @@ def test_position_tags():
     localization function to just save the centroid.
     """
     import RPi.GPIO as GPIO
-    GPIO.setup(7, GPIO.OUTPUT)
+    GPIO.setup(7, GPIO.OUT)
     GPIO.output(7,0)
-    GPIO.setup(7, GPIO.INPUT)
+    GPIO.setup(7, GPIO.IN)
 
     probe.initialize_raster_scanner()
     global direction
@@ -106,7 +106,7 @@ def test_position_tags():
             direction = -1*direction
         else:
             move.move_here(locat,(locat['x'],locat['y']+12.5*direction))
-            save_position(locat)
+            localization.save_position(locat)
         if GPIO.input(7)==1:
             print("Finishing position tag test")
             break
