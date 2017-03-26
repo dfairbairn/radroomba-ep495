@@ -161,6 +161,7 @@ def save_reading(data, loc):
     if type(data)==type("look up stringtype later"):
         data = extract_counts(data)
     f = open(scan_fname, "a")
+
     # First line of the file: give headings to the data columns
     if f.tell() == 0:
         f.write("counts,x,y\n")
@@ -169,7 +170,19 @@ def save_reading(data, loc):
     f.close() 
     return
 
-def probe_continuous_read():
+def save_position(locat):
+    """
+    """
+    loc_fname = 'robot_locs.txt'
+    f = open(loc_fname,"a")
+
+    if f.tell() == 0:
+        f.write(locat.keys())
+        f.write('x,y,phi\n')
+
+    return
+
+def task_continuous_proberead():
     """ This task is set up currently to continually accept readings and append
     them to a contaminant map. 
     

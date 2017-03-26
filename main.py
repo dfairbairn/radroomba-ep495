@@ -77,6 +77,42 @@ def straight_line_test():
             turn_routine()
     return
 
+def test_position_tags():
+    """
+    Endlessly scan and move forward 3 times before scanning and turning around.
+    Tests position tag fidelity and whether turns fuck things up. Uses a new
+    localization function to just save the centroid.
+    """
+    import RPi.GPIO as GPIO
+    GPIO.setup(7, GPIO.OUTPUT)
+    GPIO.output(7,0)
+    GPIO.setup(7, GPIO.INPUT)
+
+    probe.initialize_raster_scanner()
+    global direction
+    global rast_dir
+    scan_counter = 0
+    while True:
+        scan_counter += 1
+        scanning=True
+        probe.do_read_sweep(locat, rast_dir)
+        scanning=False
+        rast_dir = -rast_dir + 1
+    
+        # move_one_increment()
+        if scan_counter >= 3:
+            turn_routine()
+            scan_counter = 0
+            direction = -1*direction
+        else:
+            move.move_here(locat,(locat['x'],locat['y']+12.5*direction))
+            save_position(locat)
+        if GPIO.input(7)==1:
+            print("Finishing position tag test")
+            break
+    return
+
+
 def turn_scan(up_or_down):
     global rast_dir
     i = 0
