@@ -109,7 +109,7 @@ def look_here(location,phiGoing):
     while right_direction == False:
         time.sleep(0.01)
         phiNow, garbage1, garbage2 = bno.read_euler()
-        print(phiNow, 'is the current angle')
+        #print(phiNow, 'is the current angle')
         diff = phiNow - phiGoing # could be -359.9 up to 359.9
         if diff < 0:
             diff = diff + 360
@@ -153,34 +153,20 @@ def pivot(location,dPhi):
     while right_direction is False:
         time.sleep(0.01)
         currPhi, garbage1, garbage2 = bno.read_euler()
-        print(currPhi,'is the current angle')
+        #print(currPhi,'is the current angle')
         diff = currPhi - phiGoing
         if diff < 0:
-            print('**SUBZERO MORTAL KOMBAT')#
             diff = diff + 360
-     #   if dPhi > 0:
-     #       if currPhi > target:
-     #           motors.setSpeeds(-speedL,0)
-     #       else:
-     #           motors.setSpeeds(speedL,0)
-     #   elif dPhi < 0:
-     #       if currPhi < target:
-     #           motors.setSpeeds(0,-speedR)
-     #       else:
-     #           motors.setSpeeds(0,speedR)
+
         if (diff <= 0.15) or (abs(diff - 360.0)<= 0.15):
-            print('**found sorry, could not handle reading this')
             motors.setSpeeds(0,0)
             motors.disable()
             right_direction = True
         else:
-            print('**else')
             motors.setSpeeds(speedL,speedR)
     time.sleep(0.02)
     pivot_update(location,currPhi)
     return
-            
-   
 
 def move_here(location,destination):
     """Attempts to move the robot to a specified destination along the shortest

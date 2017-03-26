@@ -95,10 +95,15 @@ def position_update(locat, encL, encR, phi1, phi2):
     return
 
 def pivot_update(locat,phi2):
-    '''Updates robot x,y,phi if a one-wheeledpivot maneuver was undertaken'''
-
-    dx = 22.75*(math.sin(phi2*3.1415926535/180) - math.sin(locat['phi']*3.1415926535/180))
-    dy = 22.75*(math.cos(phi2*3.1415926535/180) - math.cos(locat['phi']*3.1415926535/180))
+    '''
+    Updates robot x,y,phi if a one-wheeledpivot maneuver was undertaken
+    
+    Realized the angle we were analyzing with is psi = phi - 90 degrees
+    '''
+    psi2 = phi2 - 90.0
+    psi1 = locat['phi'] - 90.0
+    dx = 22.75*(math.sin(psi2*3.1415926535/180) - math.sin(psi1*3.1415926535/180))
+    dy = 22.75*(math.cos(psi2*3.1415926535/180) - math.cos(psi1*3.1415926535/180))
     locat['x'] += dx
     locat['y'] += dy
     locat['phi'] = phi2
